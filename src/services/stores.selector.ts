@@ -2,10 +2,8 @@ import {
   addBanner,
   addFavorite,
   fetchMovies,
-  getBanner,
   getFavorite,
-  removeFavorite,
-  searchMovies,
+  resetaddFavorite,
 } from './actions/appActions';
 
 const mapStateToProps = (state: any) => ({
@@ -14,12 +12,10 @@ const mapStateToProps = (state: any) => ({
 
 const mapDispatchToProps = {
   fetchMovies,
-  searchMovies,
   getFavorite,
   addFavorite,
-  removeFavorite,
-  getBanner,
   addBanner,
+  resetaddFavorite,
 };
 
 export {mapStateToProps, mapDispatchToProps};

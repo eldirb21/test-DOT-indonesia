@@ -4,6 +4,7 @@ import * as type from './constant.type';
 import {getLanguage, getEnvConfig} from './env.config';
 import Api from './httpClient';
 import ENDPOINTS from './api.endpoint';
+import httpStore from './localstore';
 import {
   fontTypes,
   fonts,
@@ -29,4 +30,5 @@ export {
   getEnvConfig,
   Api,
   ENDPOINTS,
+  httpStore,
 };

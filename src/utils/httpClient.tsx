@@ -1,104 +1,101 @@
 import qs from 'qs';
-import axios, {
-  AxiosResponse,
-  AxiosError,
-  InternalAxiosRequestConfig,
-} from 'axios';
 import {getEnvConfig} from './env.config';
 
 const envConfig = getEnvConfig();
+const baseURL = `${envConfig.API_SERVER}apikey=${envConfig.API_KEY}`;
 
-const Instance = axios.create({
-  baseURL: envConfig.API_SERVER + `apikey=${envConfig.API_KEY}`,
-});
+const defaultHeaders = {
+  'Cache-Control': 'no-cache',
+};
 
-Instance.interceptors.request.use(
-  async (
-    config: InternalAxiosRequestConfig,
-  ): Promise<InternalAxiosRequestConfig> => {
-    if (config.headers) {
-      config.headers['Cache-Control'] = 'no-cache';
-    } else {
-      config.headers = new axios.AxiosHeaders();
-      config.headers['Cache-Control'] = 'no-cache';
+const fetchWrapper = async (url: string, options = {}) => {
+  const response = await fetch(baseURL + url, {
+    ...options,
+    headers: {
+      ...defaultHeaders,
+      ...options.headers,
+    },
+  });
+
+  if (!response.ok) {
+    const error = new Error('An error occurred while fetching the data.');
+    error.response = response;
+    throw error;
+  }
+
+  const responseData = await response;
+
+  response.headers.forEach((value: any, name: string) => {
+    if (name.toLowerCase() === 'cache-control') {
+      response.headers['Cache-Control'] = 'no-cache';
     }
-    return config;
-  },
-  (error: AxiosError): Promise<AxiosError> => {
-    return Promise.reject(error);
-  },
-);
+  });
 
-Instance.interceptors.response.use(
-  async (response: AxiosResponse): Promise<AxiosResponse> => {
-    response.headers['Cache-Control'] = 'no-cache';
-    return response;
-  },
-  (error: AxiosError): Promise<AxiosError> => {
-    return Promise.reject(error);
-  },
-);
-
-interface ParamsType {
-  [key: string]: any;
-}
+  return responseData;
+};
 
 const Api = {
-  post(
-    url: string,
-    reqBody?: ParamsType,
-    isJson: boolean = true,
-  ): Promise<AxiosResponse> {
-    const requestBody = isJson ? reqBody : qs.stringify(reqBody);
+  post: async (url: string, reqBody = {}, isJson = true) => {
+    const requestBody = isJson
+      ? JSON.stringify(reqBody)
+      : qs.stringify(reqBody);
 
-    // Set the Content-Type header based on isJson value
     const headers = {
       'Content-Type': isJson
         ? 'application/json'
         : 'application/x-www-form-urlencoded',
     };
-    console.log(`POST: ${Instance?.defaults?.baseURL + url}`);
-    return Instance.post(url, requestBody, {headers});
+
+    console.log(`POST: ${baseURL + url}`);
+    return fetchWrapper(url, {
+      method: 'POST',
+      headers,
+      body: requestBody,
+    });
   },
 
-  get(
-    url: string,
-    reqBody?: any,
-    isJson: boolean = true,
-  ): Promise<AxiosResponse> {
-    const requestBody = isJson ? reqBody : qs.stringify(reqBody);
+  get: async (url: any, reqBody = {}, isJson = true) => {
+    const queryString = isJson ? qs.stringify(reqBody) : '';
+    const finalUrl = queryString ? `${url}?${queryString}` : url;
 
-    console.log(`GET: ${Instance.defaults.baseURL + url}`);
-    return Instance.get(url, requestBody);
+    console.log(`GET: ${baseURL + finalUrl}`);
+    return fetchWrapper(finalUrl, {
+      method: 'GET',
+    });
   },
-  delete(
-    url: string,
-    reqBody: any,
-    isJson: boolean = true,
-  ): Promise<AxiosResponse> {
-    // Set the Content-Type header based on isJson value
+
+  delete: async (url: string, reqBody = {}, isJson = true) => {
     const headers = {
       'Content-Type': isJson
         ? 'application/json'
         : 'application/x-www-form-urlencoded',
     };
-    return Instance.delete(url, {headers});
-  },
-  update(
-    url: string,
-    reqBody: ParamsType,
-    isJson: boolean = true,
-  ): Promise<AxiosResponse> {
-    const requestBody = isJson ? reqBody : qs.stringify(reqBody);
 
-    // Set the Content-Type header based on isJson value
+    console.log(`DELETE: ${baseURL + url}`);
+    return fetchWrapper(url, {
+      method: 'DELETE',
+      headers,
+      body: isJson ? JSON.stringify(reqBody) : qs.stringify(reqBody),
+    });
+  },
+
+  update: async (url: string, reqBody = {}, isJson = true) => {
+    const requestBody = isJson
+      ? JSON.stringify(reqBody)
+      : qs.stringify(reqBody);
+
     const headers = {
       'Content-Type': isJson
         ? 'application/json'
         : 'application/x-www-form-urlencoded',
     };
-    console.log(`UPDATE: ${Instance.defaults.baseURL + url}`);
-    return Instance.put(url, requestBody, {headers});
+
+    console.log(`UPDATE: ${baseURL + url}`);
+    return fetchWrapper(url, {
+      method: 'PUT',
+      headers,
+      body: requestBody,
+    });
   },
 };
 

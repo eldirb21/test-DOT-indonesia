@@ -5,23 +5,59 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Container, Icons, Texts} from '@atoms';
 import {colors, deviceWidth, fonts, fontTypes, scale} from '@utils';
 import {Appbar} from '@molecules';
+import {connect} from 'react-redux';
+import {mapStateToProps, mapDispatchToProps} from '@storeSelector';
 
 type Props = {
   [x: string]: any;
 };
 
 const Details = (props: Props) => {
+  const {favorites, favoriteStatus} = props.appStore;
   const item = props.route.params;
-  const [isFavorite, setisFavorite] = useState(true);
+  const [data, setData] = useState<any>({});
   const goBack = () => props.navigation.goBack();
 
-  const onFavorite = () => {
-    console.log('press');
+  const fetchDetail = () => {
+    const newItem = favorites?.find((x: any) => x?.imdbID === item?.imdbID);
+    if (newItem) {
+      setData(newItem);
+    } else {
+      setData(item);
+    }
   };
+
+  useEffect(() => {
+    fetchDetail();
+    if (favoriteStatus === 'Success') {
+      fetchDetail();
+      props.resetaddFavorite();
+      props.getFavorite();
+    }
+  }, [favoriteStatus, favorites]);
+
+  const setToFavorite = () => {
+    let isExisting = false;
+
+    const updatedFavorites = favorites?.filter((favorite: any) => {
+      if (favorite.imdbID === data.imdbID) {
+        isExisting = true;
+        return false;
+      }
+      return true;
+    });
+
+    if (!isExisting) {
+      const newdata = {...data, isFavorite: true};
+      updatedFavorites?.unshift(newdata);
+    }
+    props.addFavorite(updatedFavorites);
+  };
+
   return (
     <Container>
       <Appbar
@@ -44,18 +80,20 @@ const Details = (props: Props) => {
             <Texts style={styles.title}>{item.Title}</Texts>
             <TouchableOpacity
               style={styles.favorite}
-              onPress={onFavorite}
+              onPress={setToFavorite}
               activeOpacity={0.8}>
               <Icons
-                name={isFavorite ? 'heart-fill' : 'heart'}
-                color={isFavorite ? colors.red : colors.textDefault}
+                name={data?.isFavorite ? 'heart-fill' : 'heart'}
+                color={data?.isFavorite ? colors.red : colors.textDefault}
                 size={fonts.font16}
                 type="Octicons"
               />
-              <Texts
-                style={{color: isFavorite ? colors.red : colors.textDefault}}>
-                {isFavorite ? '' : 'Favorite'}
-              </Texts>
+              {/* <Texts
+                style={{
+                  color: data?.isFavorite ? colors.red : colors.textDefault,
+                }}>
+                {data?.isFavorite ? '' : 'Favorite'}
+              </Texts> */}
             </TouchableOpacity>
           </View>
           <Texts style={styles.desc}>
@@ -67,7 +105,7 @@ const Details = (props: Props) => {
   );
 };
 
-export default Details;
+export default connect(mapStateToProps, mapDispatchToProps)(Details);
 
 const styles = StyleSheet.create({
   appbar: {

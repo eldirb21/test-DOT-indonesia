@@ -1,5 +1,6 @@
 import {ActivityIndicator, Modal, StyleSheet, View} from 'react-native';
 import React from 'react';
+import {colors} from '@utils';
 
 type Props = {
   visible?: boolean;
@@ -11,7 +12,7 @@ const Spinner = (props: Props) => {
   return (
     <Modal visible={props.visible} transparent statusBarTranslucent>
       <View style={[styles.spinner, props.style]}>
-        <ActivityIndicator size={40} />
+        <ActivityIndicator size={'large'} color={colors.white} />
       </View>
     </Modal>
   );
@@ -25,5 +26,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 9999,
+    backgroundColor: colors.overlayShadow,
   },
 });

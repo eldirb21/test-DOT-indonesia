@@ -21,6 +21,8 @@ const getLanguage = () => {
 const envConfig = {
   API_SERVER: Config.API_SERVER,
   API_KEY: Config.API_KEY,
+  VERSION_NAME: Config.VERSION_NAME,
+  VERSION_CODE: Config.VERSION_CODE,
   ENV: Config.ENV,
 };
 
