@@ -1,3 +1,22 @@
 {
-  "extends": "@react-native/typescript-config/tsconfig.json"
+  "extends": "@react-native/typescript-config/tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "baseUrl": ".",
+    "paths": {
+      "@atoms": ["src/components/atoms/index"],
+      "@molecules": ["src/components/molecules/index"],
+      "@icons": ["src/assets/icons"],
+      "@images": ["src/assets/images/index"],
+      "@nav/*": ["src/nav/*"],
+      "@pages/*": ["src/pages/*"],
+      "@utils": ["src/utils/index"],
+      "@services": ["src/services/*"],
+      "@actions": ["src/services/actions"],
+      "@reducers": ["src/services/reducers"],
+      "@store": ["src/services/stores"],
+      "@storeSelector": ["src/services/stores.selector"]
+    }
+  }
 }

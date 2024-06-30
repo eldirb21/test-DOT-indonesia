@@ -1,0 +1,10 @@
+export const RESET_ALL_REDUCERS = 'RESET_ALL_REDUCERS';
+export const FETCH_MOVIES = 'FETCH_MOVIES';
+export const SEARCH_MOVIES = 'SEARCH_MOVIES';
+
+export const GET_BANNER = 'GET_BANNER';
+export const ADD_BANNER = 'ADD_BANNER';
+
+export const GET_FAVORITE = 'GET_FAVORITE';
+export const ADD_FAVORITE = 'ADD_FAVORITE';
+export const REMOVE_FAVORITE = 'REMOVE_FAVORITE';
