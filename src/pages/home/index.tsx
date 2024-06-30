@@ -124,7 +124,7 @@ const Home = (props: Props) => {
       />
 
       <Container>
-        <Texts style={styles.title}>Movies</Texts>
+        <Texts animated style={styles.title}>Movies</Texts>
         <FlatList
           data={movies}
           renderItem={renderItem}

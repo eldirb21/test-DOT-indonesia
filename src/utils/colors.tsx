@@ -13,5 +13,4 @@ export default {
   transparent: 'transparent',
   overlay: 'rgba(0,0,0,.4)',
   overlayShadow: 'hsl(rgba(0,0,0,.4)',
-
 };
