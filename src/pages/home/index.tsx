@@ -1,7 +1,7 @@
-import {FlatList, ImageBackground, StyleSheet, Text, View} from 'react-native';
+import {ActivityIndicator, FlatList, StyleSheet, View} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {Container, NotFound, Texts} from '@atoms';
-import {colors, deviceWidth, fonts, scale} from '@utils';
+import {colors, deviceWidth, fontTypes, scale} from '@utils';
 import {ItemCarousel, ItemMovie} from '@molecules';
 import Carousel from 'react-native-reanimated-carousel';
 import {useIsFocused} from '@react-navigation/native';
@@ -13,77 +13,58 @@ type Props = {
 };
 
 const Home = (props: Props) => {
+  const {movies, loading, banners, favorites, favoriteStatus} = props.appStore;
   const isFocused = useIsFocused();
-  const [Items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [refresh, setRefresh] = useState(false);
+  const [loadingMore, setloadingMore] = useState(false);
   const [page, setPage] = useState(1);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [search, setsearch] = useState('');
-  const [banners, setbanners] = useState([
-    {
-      Poster:
-        'https://m.media-amazon.com/images/M/MV5BOTY4YjI2N2MtYmFlMC00ZjcyLTg3YjEtMDQyM2ZjYzQ5YWFkXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_SX300.jpg',
-      Title: 'Batman Begins',
-      Type: 'movie',
-      Year: '2005',
-      imdbID: 'tt0372784',
-    },
-    {
-      Poster:
-        'https://m.media-amazon.com/images/M/MV5BOGE2NWUwMDItMjA4Yi00N2Y3LWJjMzEtMDJjZTMzZTdlZGE5XkEyXkFqcGdeQXVyODk4OTc3MTY@._V1_SX300.jpg',
-      Title: 'The Batman',
-      Type: 'movie',
-      Year: '2022',
-      imdbID: 'tt1877830',
-    },
-    {
-      Poster:
-        'https://m.media-amazon.com/images/M/MV5BYThjYzcyYzItNTVjNy00NDk0LTgwMWQtYjMwNmNlNWJhMzMyXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_SX300.jpg',
-      Title: 'Batman v Superman: Dawn of Justice',
-      Type: 'movie',
-      Year: '2016',
-      imdbID: 'tt2975590',
-    },
-    {
-      Poster:
-        'https://m.media-amazon.com/images/M/MV5BZWQ0OTQ3ODctMmE0MS00ODc2LTg0ZTEtZWIwNTUxOGExZTQ4XkEyXkFqcGdeQXVyNzAwMjU2MTY@._V1_SX300.jpg',
-      Title: 'Batman',
-      Type: 'movie',
-      Year: '1989',
-      imdbID: 'tt0096895',
-    },
-  ]);
 
   useEffect(() => {
-    getFavorite(page, search);
-  }, [page, search]);
-
-  const getFavorite = async (page: number, search: string) => {
-    const apiKey = 'b9a08658';
-    if (page === 1) {
-      setLoading(true);
-    } else {
-      setLoadingMore(true);
+    if (isFocused) {
+      getMovies(page, 'Batman');
     }
+  }, [isFocused, page]);
 
-    try {
-      const res = await fetch(
-        `https://www.omdbapi.com/?apikey=${apiKey}&s=${
-          search || 'Batman'
-        }&page=${page}`,
-      );
-      const movies = await res?.json();
-      setItems(prevItems =>
-        page === 1 ? movies?.Search : [...prevItems, ...movies?.Search],
-      );
-      setLoading(false);
-      setLoadingMore(false);
-    } catch (error) {
-      console.log(error);
-      setLoading(false);
-      setLoadingMore(false);
+  useEffect(() => {
+    if (favoriteStatus === 'Success') {
+      props.getFavorite();
     }
+  }, [favoriteStatus]);
+
+  useEffect(() => {
+    if (!loading) {
+      setloadingMore(false);
+    }
+  }, [loading]);
+
+  const getMovies = async (page: number, search: any) => {
+    props.fetchMovies({
+      page: page,
+      type: search,
+    });
+  };
+
+  const setToFavorite = (item: any) => {
+    let isExisting = false;
+
+    const updatedFavorites = favorites.filter((favorite: any) => {
+      if (favorite.imdbID === item.imdbID) {
+        isExisting = true;
+        return false;
+      } else return true;
+    });
+
+    if (!isExisting) {
+      const data = {...item, isFavorite: true};
+      updatedFavorites.unshift(data);
+    }
+    props.addFavorite(updatedFavorites);
+  };
+  const handlerRefresh = () => {
+    setRefresh(true);
+    setPage(1);
+    getMovies(1, 'Batman');
+    setRefresh(false);
   };
 
   const renderItem = ({item, index}: any) => {
@@ -94,7 +75,7 @@ const Home = (props: Props) => {
         image={item?.Poster}
         title={item?.Title}
         isFavorite={true}
-        onFavorite={() => {}}
+        onFavorite={() => setToFavorite(item)}
         onDetail={() => props.navigation.navigate('Details', item)}
         onWatch={() => {}}
         type={item?.Type}
@@ -107,6 +88,22 @@ const Home = (props: Props) => {
     if (loading) return null;
     return <NotFound message="No data found here" />;
   };
+
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+    return (
+      <View style={styles.loadingMore}>
+        <ActivityIndicator size="large" color={colors.tintColor} />
+      </View>
+    );
+  };
+  const handlerLoadMore = () => {
+    if (!loading && !loadingMore) {
+      setloadingMore(true);
+      setPage(prevPage => prevPage + 1);
+    }
+  };
+
   return (
     <Container animated statusbar bgColor={colors.transparent}>
       <Carousel
@@ -116,7 +113,6 @@ const Home = (props: Props) => {
         autoPlay={true}
         data={banners}
         scrollAnimationDuration={2000}
-        onSnapToItem={index => console.log('current index:', index)}
         renderItem={({item, index}: any) => (
           <ItemCarousel
             key={index}
@@ -128,19 +124,18 @@ const Home = (props: Props) => {
       />
 
       <Container>
-        <Texts>Movies</Texts>
+        <Texts style={styles.title}>Movies</Texts>
         <FlatList
-          // key={2} // Change the key to force a re-render
-          data={Items}
+          data={movies}
           renderItem={renderItem}
           ListEmptyComponent={renderEmpty}
           showsVerticalScrollIndicator={false}
           numColumns={2}
-          // onRefresh={handlerRefresh}
+          onRefresh={handlerRefresh}
           refreshing={refresh}
-          // onEndReached={handlerLoadMore}
+          onEndReached={handlerLoadMore}
           onEndReachedThreshold={0.5}
-          // ListFooterComponent={renderFooter}
+          ListFooterComponent={renderFooter}
           keyExtractor={(item: any, index: number) => item?.imdbID + index}
         />
       </Container>
@@ -150,4 +145,15 @@ const Home = (props: Props) => {
 
 export default connect(mapStateToProps, mapDispatchToProps)(Home);
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  title: {
+    padding: 10,
+    marginTop: 15,
+    fontFamily: fontTypes.semiBold,
+  },
+  loadingMore: {
+    paddingVertical: 20,
+    borderTopWidth: 1,
+    borderColor: colors.borderColor,
+  },
+});
